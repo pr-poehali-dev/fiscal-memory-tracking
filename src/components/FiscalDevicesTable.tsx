@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
+import { api } from '@/lib/api';
 
 interface FiscalDevicesTableProps {
   userRole: 'admin' | 'manager' | 'viewer';
@@ -27,15 +28,24 @@ interface FiscalDevicesTableProps {
 const FiscalDevicesTable = ({ userRole }: FiscalDevicesTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [devices, setDevices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const devices = [
-    { id: 'ФН-001234', name: 'Касса 1 - Магазин Центр', location: 'г. Москва', expiryDate: '2024-12-25', daysLeft: 10, status: 'billed', ofd: 'ОФД.ру' },
-    { id: 'ФН-002345', name: 'Касса 2 - Магазин Запад', location: 'г. Санкт-Петербург', expiryDate: '2025-01-15', daysLeft: 31, status: 'pending', ofd: 'Такском' },
-    { id: 'ФН-003456', name: 'Касса 3 - Филиал Север', location: 'г. Казань', expiryDate: '2024-12-28', daysLeft: 13, status: 'billed', ofd: 'Первый ОФД' },
-    { id: 'ФН-004567', name: 'Касса 4 - Склад Центральный', location: 'г. Москва', expiryDate: '2025-03-10', daysLeft: 85, status: 'not_required', ofd: 'ОФД.ру' },
-    { id: 'ФН-005678', name: 'Касса 5 - Магазин Восток', location: 'г. Екатеринбург', expiryDate: '2024-12-22', daysLeft: 7, status: 'pending', ofd: 'Контур' },
-    { id: 'ФН-006789', name: 'Касса 6 - Филиал Юг', location: 'г. Краснодар', expiryDate: '2025-02-20', daysLeft: 67, status: 'billed', ofd: 'Такском' },
-  ];
+  useEffect(() => {
+    loadDevices();
+  }, [searchTerm, statusFilter]);
+
+  const loadDevices = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getDevices(searchTerm, statusFilter);
+      setDevices(data.devices);
+    } catch (error) {
+      console.error('Failed to load devices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -56,14 +66,6 @@ const FiscalDevicesTable = ({ userRole }: FiscalDevicesTableProps) => {
     if (days <= 30) return 'bg-yellow-500 text-white';
     return 'bg-blue-500 text-white';
   };
-
-  const filteredDevices = devices.filter(device => {
-    const matchesSearch = device.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || device.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
 
   const canEdit = userRole === 'admin' || userRole === 'manager';
 
@@ -122,7 +124,13 @@ const FiscalDevicesTable = ({ userRole }: FiscalDevicesTableProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDevices.map((device, index) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    <Icon name="Loader2" className="animate-spin text-primary mx-auto" size={32} />
+                  </TableCell>
+                </TableRow>
+              ) : devices.map((device, index) => (
                 <TableRow key={index} className="hover:bg-purple-50/50 transition-colors">
                   <TableCell className="font-mono text-sm">{device.id}</TableCell>
                   <TableCell className="font-medium">{device.name}</TableCell>
@@ -160,7 +168,7 @@ const FiscalDevicesTable = ({ userRole }: FiscalDevicesTableProps) => {
         </div>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div>Показано {filteredDevices.length} из {devices.length} записей</div>
+          <div>Показано {devices.length} записей</div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled>
               <Icon name="ChevronLeft" size={16} />

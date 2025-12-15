@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 interface ImportDataProps {
   userRole: 'admin' | 'manager' | 'viewer';
@@ -12,8 +13,26 @@ interface ImportDataProps {
 const ImportData = ({ userRole }: ImportDataProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [importHistory, setImportHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const canImport = userRole === 'admin' || userRole === 'manager';
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getImportHistory();
+      setImportHistory(data.history);
+    } catch (error) {
+      console.error('Failed to load history:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -52,19 +71,13 @@ const ImportData = ({ userRole }: ImportDataProps) => {
     }
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (uploadedFile) {
       toast.success('Данные успешно импортированы!');
       setUploadedFile(null);
+      await loadHistory();
     }
   };
-
-  const importHistory = [
-    { id: 1, filename: 'devices_november.xlsx', date: '2024-12-10 15:30', user: 'Иванов И.', records: 45, status: 'success' },
-    { id: 2, filename: 'ofd_contracts.xlsx', date: '2024-12-08 11:20', user: 'Петрова М.', records: 12, status: 'success' },
-    { id: 3, filename: 'devices_october.xlsx', date: '2024-11-28 09:45', user: 'Сидоров П.', records: 38, status: 'success' },
-    { id: 4, filename: 'updates_devices.xlsx', date: '2024-11-15 16:10', user: 'Иванов И.', records: 22, status: 'warning' },
-  ];
 
   return (
     <div className="space-y-6">

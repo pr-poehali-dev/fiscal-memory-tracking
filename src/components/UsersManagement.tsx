@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,54 +12,31 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
+import { api } from '@/lib/api';
 
 interface UsersManagementProps {
   userRole: 'admin' | 'manager' | 'viewer';
 }
 
 const UsersManagement = ({ userRole }: UsersManagementProps) => {
-  const users = [
-    { 
-      id: 1, 
-      name: 'Иванов Иван', 
-      email: 'ivanov@company.ru', 
-      role: 'admin',
-      lastActive: '2024-12-15 14:32',
-      status: 'online'
-    },
-    { 
-      id: 2, 
-      name: 'Петрова Мария', 
-      email: 'petrova@company.ru', 
-      role: 'manager',
-      lastActive: '2024-12-15 12:15',
-      status: 'offline'
-    },
-    { 
-      id: 3, 
-      name: 'Сидоров Петр', 
-      email: 'sidorov@company.ru', 
-      role: 'manager',
-      lastActive: '2024-12-15 13:45',
-      status: 'online'
-    },
-    { 
-      id: 4, 
-      name: 'Кузнецова Анна', 
-      email: 'kuznetsova@company.ru', 
-      role: 'viewer',
-      lastActive: '2024-12-14 18:20',
-      status: 'offline'
-    },
-    { 
-      id: 5, 
-      name: 'Смирнов Алексей', 
-      email: 'smirnov@company.ru', 
-      role: 'viewer',
-      lastActive: '2024-12-15 10:05',
-      status: 'offline'
-    },
-  ];
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getUsers();
+      setUsers(data.users);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getRoleInfo = (role: string) => {
     switch (role) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,59 +11,31 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
+import { api } from '@/lib/api';
 
 interface OFDTableProps {
   userRole: 'admin' | 'manager' | 'viewer';
 }
 
 const OFDTable = ({ userRole }: OFDTableProps) => {
-  const ofdProviders = [
-    { 
-      id: 1, 
-      name: 'ОФД.ру', 
-      contractNumber: 'ДГ-2023-001', 
-      expiryDate: '2025-06-15', 
-      daysLeft: 182,
-      devicesCount: 87,
-      status: 'active'
-    },
-    { 
-      id: 2, 
-      name: 'Такском', 
-      contractNumber: 'ТК-2023-045', 
-      expiryDate: '2024-12-30', 
-      daysLeft: 15,
-      devicesCount: 64,
-      status: 'expiring'
-    },
-    { 
-      id: 3, 
-      name: 'Первый ОФД', 
-      contractNumber: 'ПО-2023-112', 
-      expiryDate: '2025-03-20', 
-      daysLeft: 95,
-      devicesCount: 52,
-      status: 'active'
-    },
-    { 
-      id: 4, 
-      name: 'Контур', 
-      contractNumber: 'КТ-2023-078', 
-      expiryDate: '2025-01-10', 
-      daysLeft: 26,
-      devicesCount: 35,
-      status: 'expiring'
-    },
-    { 
-      id: 5, 
-      name: 'Тензор', 
-      contractNumber: 'ТЗ-2023-034', 
-      expiryDate: '2025-08-05', 
-      daysLeft: 233,
-      devicesCount: 10,
-      status: 'active'
-    },
-  ];
+  const [ofdProviders, setOfdProviders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadOfd();
+  }, []);
+
+  const loadOfd = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getOFD();
+      setOfdProviders(data.providers);
+    } catch (error) {
+      console.error('Failed to load OFD:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusInfo = (status: string) => {
     switch (status) {

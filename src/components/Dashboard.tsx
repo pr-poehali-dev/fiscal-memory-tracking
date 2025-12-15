@@ -1,49 +1,64 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Progress } from '@/components/ui/progress';
+import { api } from '@/lib/api';
 
 const Dashboard = () => {
-  const stats = [
+  const [stats, setStats] = useState({
+    totalDevices: 0,
+    expiringSoon: 0,
+    activeOfd: 0,
+    billedCount: 0
+  });
+  const [expiringDevices, setExpiringDevices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await api.getDashboard();
+        setStats(data.stats);
+        setExpiringDevices(data.expiringDevices);
+      } catch (error) {
+        console.error('Failed to load dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const statsCards = [
     {
       title: 'Всего накопителей',
-      value: '248',
-      change: '+12',
+      value: stats.totalDevices.toString(),
       icon: 'HardDrive',
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
       title: 'Истекает до 30 дней',
-      value: '18',
-      change: '+3',
+      value: stats.expiringSoon.toString(),
       icon: 'AlertTriangle',
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50'
     },
     {
       title: 'Активных ОФД',
-      value: '5',
-      change: '0',
+      value: stats.activeOfd.toString(),
       icon: 'Server',
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
       title: 'Выставлено счетов',
-      value: '42',
-      change: '+8',
+      value: stats.billedCount.toString(),
       icon: 'FileText',
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50'
     }
-  ];
-
-  const expiringDevices = [
-    { id: 'ФН-001234', name: 'Касса 1 - Магазин Центр', daysLeft: 7, status: 'billed' },
-    { id: 'ФН-005678', name: 'Касса 3 - Филиал Север', daysLeft: 14, status: 'pending' },
-    { id: 'ФН-009012', name: 'Касса 5 - Склад', daysLeft: 21, status: 'not_required' },
-    { id: 'ФН-003456', name: 'Касса 2 - Магазин Запад', daysLeft: 28, status: 'pending' }
   ];
 
   const getStatusInfo = (status: string) => {
@@ -66,10 +81,16 @@ const Dashboard = () => {
     return 'text-blue-600';
   };
 
+  if (loading) {
+    return <div className="flex items-center justify-center py-12">
+      <Icon name="Loader2" className="animate-spin text-primary" size={32} />
+    </div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
+        {statsCards.map((stat, index) => (
           <Card 
             key={index} 
             className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 border-transparent hover:border-primary/20 animate-scale-in"
@@ -88,11 +109,6 @@ const Dashboard = () => {
             <CardContent>
               <div className="flex items-baseline justify-between">
                 <div className="text-3xl font-bold">{stat.value}</div>
-                {stat.change !== '0' && (
-                  <Badge variant="secondary" className="text-xs">
-                    {stat.change}
-                  </Badge>
-                )}
               </div>
             </CardContent>
           </Card>

@@ -1,0 +1,40 @@
+{
+  "tests": [
+    {
+      "name": "Get dashboard statistics",
+      "method": "GET",
+      "path": "/?endpoint=dashboard",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "stats": {
+          "totalDevices": "number",
+          "expiringSoon": "number",
+          "activeOfd": "number",
+          "billedCount": "number"
+        },
+        "expiringDevices": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all devices",
+      "method": "GET",
+      "path": "/?endpoint=devices",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "devices": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get OFD providers",
+      "method": "GET",
+      "path": "/?endpoint=ofd",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "providers": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
